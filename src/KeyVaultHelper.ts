@@ -123,16 +123,19 @@ export class KeyVaultHelper {
         return result;
     }
 
-    private readKeyValuesFromFile(filePath: string): Map<string, string> {
+    private readKeyValuesFromFile(filePattern: string): Map<string, string> {
       const keyValueMap: Map<string, string> = new Map();
-      const fileContent = readFileSync(filePath, 'utf8');
+      const filePaths = glob.sync(filePattern);
+      for (const filePath of filePaths) {
+        const fileContent = fs.readFileSync(filePath, 'utf8');
+        const lines = fileContent.split('\n');
 
-      const lines = fileContent.split('\n');
-      for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (trimmedLine) {
-          const [key, value] = trimmedLine.split('=');
-          keyValueMap.set(key.trim(), value.trim());
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine) {
+            const [key, value] = trimmedLine.split('=');
+            keyValueMap.set(key.trim(), value.trim());
+          }
         }
       }
 
