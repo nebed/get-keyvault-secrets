@@ -38,9 +38,33 @@ jobs:
         creds: ${{ secrets.AZURE_CREDENTIALS }} 
     - uses: Azure/get-keyvault-secrets@v1
       with:
-        keyvault: "my
-        Vault"
-        secrets: 'mySecret'  # comma separated list of secret keys that need to be fetched from the Key Vault 
+        keyvault: "myVault"
+        secrets: 'SECRETENV=mySecret'  # comma separated list of secret keys and expected environment variable that need to be fetched from the Key Vault 
+      id: myGetSecretAction
+        
+```
+
+### Sample workflow to build and deploy a Node.js Web app to Azure using publish profile using secrets file
+
+```yaml
+
+# File: .github/workflows/workflow.yml
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # checkout the repo
+    - uses: actions/checkout@master
+    - uses: Azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }} 
+    - uses: Azure/get-keyvault-secrets@v1
+      with:
+        keyvault: "myVault"
+        secretsfile: 'secrets/env'  # path to secrets file with key,value secrets
       id: myGetSecretAction
         
 ```
@@ -93,13 +117,13 @@ jobs:
     - uses: Azure/get-keyvault-secrets@v1
       with:
         keyvault: "myKeyVault"
-        secrets: 'mySecret1, mySecret2'
+        secrets: 'SECRETENV1=mySecret1, SECRETENV2=mySecret2'
       id: myGetSecretAction
     - uses: Azure/docker-login@v1
       with:
         login-server: mycontainer.azurecr.io
-        username: ${{ steps.myGetSecretAction.outputs.mySecret1 }}
-        password: ${{ steps.myGetSecretAction.outputs.mySecret2 }}
+        username: ${{ env.SECRETENV1 }}  # or ${{ steps.myGetSecretAction.outputs.SECRETENV1 }}  
+        password: ${{ env.SECRETENV2 }} # or ${{ steps.myGetSecretAction.outputs.SECRETENV2 }}
     - run: |
         cd go-sample
         docker build . -t my.azurecr.io/myimage:${{ github.sha }}
