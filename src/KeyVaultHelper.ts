@@ -2,6 +2,7 @@ import * as core from '@actions/core';
 import { IAuthorizer } from 'azure-actions-webclient/Authorizer/IAuthorizer';
 import { KeyVaultActionParameters } from "./KeyVaultActionParameters";
 import { KeyVaultClient } from "./KeyVaultClient";
+import { readFileSync } from 'fs';
 import util = require("util");
 
 export class AzureKeyVaultSecret {
@@ -56,7 +57,7 @@ export class KeyVaultHelper {
                 
                 var getSecretValuePromises: Promise<any>[] = [];
                 listOfSecrets.forEach((secret: AzureKeyVaultSecret, index: number) => {
-                    getSecretValuePromises.push(this.downloadSecretValue(secret.name));
+                    getSecretValuePromises.push(this.downloadSecretValue(secret.name, secret.name));
                 });
 
                 Promise.all(getSecretValuePromises).then(() => {
@@ -67,15 +68,22 @@ export class KeyVaultHelper {
     }
 
     private downloadSelectedSecrets(secretsFilter: string): Promise<void> {
-        let selectedSecrets: string[] = [];        
+        //let selectedSecrets: string[] = [];
+        let selectedSecrets: Map<string, string> = new Map();        
         if (secretsFilter) {
-            selectedSecrets = secretsFilter.split(',');
+            pairs = secretsFilter.split(',');
+                for (const pair of pairs) {
+                    const [key, value] = pair.trim().split('=');
+                    selectedSecrets.set(key.trim(), value.trim());
+                }
+        } else if (secretsFilePath) {
+            selectedSecrets = this.readKeyValuesFromFile(secretsFilePath)
         }
         
         return new Promise<void>((resolve, reject) => {
             var getSecretValuePromises: Promise<any>[] = [];
-            selectedSecrets.forEach((secretName: string) => {
-                getSecretValuePromises.push(this.downloadSecretValue(secretName));
+            selectedSecrets.forEach((secretName: string, secretEnv: string) => {
+                getSecretValuePromises.push(this.downloadSecretValue(secretName, secretEnv));
             });
 
             Promise.all(getSecretValuePromises).then(() => {
@@ -86,8 +94,8 @@ export class KeyVaultHelper {
         });
     }
 
-    private downloadSecretValue(secretName: string): Promise<any> {
-        secretName = secretName.trim();
+    private downloadSecretValue(secretName: string, secretEnv: string): Promise<any> {
+        //secretName = secretName.trim();
 
         return new Promise<void>((resolve, reject) => {
             this.keyVaultClient.getSecretValue(secretName, (error, secretValue) => {
@@ -95,7 +103,7 @@ export class KeyVaultHelper {
                     core.setFailed(util.format("Could not download the secret %s", secretName));
                 }
                 else {
-                    this.setVaultVariable(secretName, secretValue);
+                    this.setVaultVariable(secretEnv, secretValue);
                 }
                 
                 return resolve();
@@ -124,6 +132,22 @@ export class KeyVaultHelper {
         });
         
         return result;
+    }
+
+    private readKeyValuesFromFile(filePath: string): Map<string, string> {
+      const keyValueMap: Map<string, string> = new Map();
+      const fileContent = readFileSync(filePath, 'utf8');
+
+      const lines = fileContent.split('\n');
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (trimmedLine) {
+          const [key, value] = trimmedLine.split('=');
+          keyValueMap.set(key.trim(), value.trim());
+        }
+      }
+
+      return keyValueMap;
     }
 
     private getError(error: any): any {

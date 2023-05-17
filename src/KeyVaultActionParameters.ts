@@ -7,17 +7,23 @@ export class KeyVaultActionParameters {
     public keyVaultName: string;
     public secretsFilter: string;
     public keyVaultUrl: string;
+    public secretsFilePath: string;
 
     public getKeyVaultActionParameters(handler: IAuthorizer) : KeyVaultActionParameters {
         this.keyVaultName = core.getInput("keyvault");
         this.secretsFilter = core.getInput("secrets");
+        this.secretsFilePath = core.getInput("secretsfile");
 
         if (!this.keyVaultName) {
             core.setFailed("Vault name not provided.");
         }
 
-        if (!this.secretsFilter) {
-            core.setFailed("Secret filter not provided.");
+        if (this.secretsFilter && this.secretsFilePath) {
+          core.setFailed("Both secretsFilter and secretsFilePath cannot be provided at the same time.");
+        }
+
+        if (!this.secretsFilter && !this.secretsFilePath) {
+          core.setFailed("One of secretsFilter or secretsFilePath should be provided");
         }
 
         var azureKeyVaultDnsSuffix = handler.getCloudSuffixUrl("keyvaultDns").substring(1);
