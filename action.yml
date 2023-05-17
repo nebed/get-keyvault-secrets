@@ -6,7 +6,10 @@ inputs:
     required: true
   secrets:
     description: 'Name of the secret to be fetched' #Comma separated list of secret keys can be specified
-    required: true
+    required: false
+  secretsfile:
+    description: 'Path of the secret file to be fetched' #Comma separated list of secret keys can be specified
+    required: false
 branding:
   icon: 'akv.svg'
   color: 'blue'
