@@ -27,15 +27,16 @@ export class KeyVaultHelper {
     }
 
     public downloadSecrets(): Promise<void> {
-        var downloadAllSecrets = false;
-        if (this.keyVaultActionParameters.secretsFilter && this.keyVaultActionParameters.secretsFilter.length === 1 && this.keyVaultActionParameters.secretsFilter[0] === "*") {
-            downloadAllSecrets = true;
+        if (this.keyVaultActionParameters.secretsFilePath){
+            let selectedSecrets = this.readKeyValuesFromFile(this.keyVaultActionParameters.secretsFilePath);
+            return this.downloadSelectedSecrets(selectedSecrets);
         }
 
-        if (downloadAllSecrets) {
-            return this.downloadAllSecrets();
+        if (this.keyVaultActionParameters.secretsFilter && this.keyVaultActionParameters.secretsFilter.length === 1 && this.keyVaultActionParameters.secretsFilter[0] === "*") {
+             return this.downloadAllSecrets();
         } else {
-            return this.downloadSelectedSecrets(this.keyVaultActionParameters.secretsFilter);
+            let selectedSecrets = this.readKeyValuesFromFilter(this.keyVaultActionParameters.secretsFilter);
+            return this.downloadSelectedSecrets(selectedSecrets);
         }
     }
 
@@ -67,22 +68,10 @@ export class KeyVaultHelper {
         });
     }
 
-    private downloadSelectedSecrets(secretsFilter: string): Promise<void> {
-        //let selectedSecrets: string[] = [];
-        let selectedSecrets: Map<string, string> = new Map();        
-        if (secretsFilter) {
-            pairs = secretsFilter.split(',');
-                for (const pair of pairs) {
-                    const [key, value] = pair.trim().split('=');
-                    selectedSecrets.set(key.trim(), value.trim());
-                }
-        } else if (secretsFilePath) {
-            selectedSecrets = this.readKeyValuesFromFile(secretsFilePath)
-        }
-        
+    private downloadSelectedSecrets(secretsMap: Map<string, string>): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             var getSecretValuePromises: Promise<any>[] = [];
-            selectedSecrets.forEach((secretName: string, secretEnv: string) => {
+            secretsMap.forEach((secretName: string, secretEnv: string) => {
                 getSecretValuePromises.push(this.downloadSecretValue(secretName, secretEnv));
             });
 
@@ -148,6 +137,17 @@ export class KeyVaultHelper {
       }
 
       return keyValueMap;
+    }
+
+    private readKeyValuesFromFilter(secretsFilter: string): Map<string, string> {
+        const keyValueMap: Map<string, string> = new Map();
+        const pairs = secretsFilter.split(',');
+        for (const pair of pairs) {
+            const [key, value] = pair.trim().split('=');
+            keyValueMap.set(key.trim(), value.trim());
+        }
+
+        return keyValueMap;
     }
 
     private getError(error: any): any {
