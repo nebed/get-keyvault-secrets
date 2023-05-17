@@ -16,6 +16,7 @@
   "dependencies": {
     "@actions/core": "^1.10.0",
     "@actions/exec": "^1.1.1",
+    "@types/glob": "^8.1.0",
     "azure-actions-webclient": "^1.1.0"
   },
   "repository": {
