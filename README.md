@@ -1,6 +1,13 @@
-# Deprecation notice
+# Changelog
+- Supporting specifying the Environment variable name to store the secret value (e.g SECRETENV=my-keyvault-secret, SECRETENV2=my-keyvault-secret1 )
+- Support file source with parameter **secretsfile** (secretsfile: secrets/env)
+  - file structure
+    ``` 
+    SECRETENV=my-keyvault-secret
+    SECRETENV2=my-keyvault-secret1
+    ```
 
-This Action is deprecated. Instead, one can use [azure/cli@v1 action](https://github.com/Azure/cli) and pass a custom script to it to access [azure key vault](https://docs.microsoft.com/en-us/azure/key-vault/secrets/quick-create-cli).
+
 # GitHub Action to fetch secrets from Azure Key Vault
 
 With the Get Key Vault Secrets action, you can fetch secrets from an [Azure Key Vault](https://docs.microsoft.com/en-us/rest/api/keyvault/about-keys--secrets-and-certificates) instance and consume in your GitHub Action workflows.
