@@ -1,5 +1,5 @@
-# Changelog
-- Supporting specifying the Environment variable name to store the secret value (e.g SECRETENV=my-keyvault-secret, SECRETENV2=my-keyvault-secret1 )
+# Changes
+- Support specifying the Environment variable name to store the secret value (e.g SECRETENV=my-keyvault-secret, SECRETENV2=my-keyvault-secret1 )
 - Support file source with parameter **secretsfile** (secretsfile: secrets/env)
   - file structure
     ``` 
